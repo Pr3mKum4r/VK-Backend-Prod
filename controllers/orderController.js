@@ -43,8 +43,52 @@ const createCustomOrder = async (req,res)=>{
 
 }
 
+//Use this API to 
+//Get Tracking data through orderID
+
+const getTrackingDataWithOrderId = async(req,res)=>{
+    const shiprocketToken = req.headers['Authorization'];
+    //orderID is required and channelID is optional. Will be sent from frontend as URLParameters
+    let {orderID,channelID} = req.params;
+    
+    const headers = {
+        'Authorization' : shiprocketToken,
+    };
+    try{
+        if(channelID===undefined)
+        {
+            axios.get(`https://apiv2.shiprocket.in/v1/external/courier/track?order_id=${orderID}`,{headers})
+                .then((data)=>{
+                    return res.json(data.data);
+                    //Tracking Data will be sent as response
+                })
+                .catch((error)=>{
+                    console.log(error)
+                    return res.json(error)
+                    //error has message and status code
+                })
+        }
+        else{
+            axios.get(`https://apiv2.shiprocket.in/v1/external/courier/track?order_id=${orderID}&channel_id=${channelID}`,{headers})
+                .then((data)=>{
+                    return res.json(data.data);
+                    //Tracking Data will be sent as response
+                })
+                .catch((error)=>{
+                    console.log(error)
+                    return res.json(error)
+                    //error has message and status code
+                })
+        }
+    }
+    catch(error){
+        console.log(error);
+    }
+}
 
 module.exports = orderController = {
     getAllOrders,
     createCustomOrder,
+    getTrackingDataWithOrderId,
+
 };
