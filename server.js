@@ -14,10 +14,10 @@ const PORT = 5000;
 const paymentRoutes = require('./routes/razorpayRoute.js');
 const shiprocketAuthMiddleware = require('./middlewares/shiprocketAuth.js');
 const orderRoutes = require('./routes/orderRoute.js');
-const returnOrderRoutes = require('./routes/returnOrderRoute.js');
+
 
 app.use("/api/payments", paymentRoutes);
 app.use("/api/v1/shiprocket", shiprocketAuthMiddleware);
 app.use("/api/v1/shiprocket", orderRoutes);
-app.use("/api/v1/shiprocket", returnOrderRoutes);
+
 app.listen(PORT, ()=>{console.log(`Server started at port ${PORT}`)});
