@@ -16,7 +16,8 @@ const getAllOrders = async (req, res) => {
     }
 }
 
-//Use this API to create a quick custom order.
+//Use this API to 
+//create a quick custom order.
 //https://apidocs.shiprocket.in/#247e58f3-37f3-4dfb-a4bb-b8f6ab6d41ec
 const createCustomOrder = async (req,res)=>{
     const shiprocketToken = req.headers['Authorization'];
@@ -45,7 +46,7 @@ const createCustomOrder = async (req,res)=>{
 
 //Use this API to 
 //Get Tracking data through orderID
-
+//https://apidocs.shiprocket.in/#bfcf3357-4e39-4134-831a-1ff33f67205e
 const getTrackingDataWithOrderId = async(req,res)=>{
     const shiprocketToken = req.headers['Authorization'];
     //orderID is required and channelID is optional. Will be sent from frontend as URLParameters
