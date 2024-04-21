@@ -114,7 +114,7 @@ const getTrackingDataWithOrderId = async(req,res)=>{
 module.exports = orderController = {
     getAllOrders,
     createCustomOrder,
-    createReturnOrder
+    createReturnOrder,
     getTrackingDataWithOrderId,
 
 };
