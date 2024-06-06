@@ -49,31 +49,61 @@ const createReturnOrder = async (req, res) => {
 
 //Use this API to create a quick custom order.
 //https://apidocs.shiprocket.in/#247e58f3-37f3-4dfb-a4bb-b8f6ab6d41ec
-const createCustomOrder = async (req, res) => {
-  const shiprocketToken = req.headers["Authorization"];
-  //details about order will be sent from frontend as orderData
-  let orderData = req.body;
+// const createCustomOrder = async (req, res) => {
+//   const shiprocketToken = req.headers["Authorization"];
+//   //details about order will be sent from frontend as orderData
+//   let orderData = req.body;
+//   const headers = {
+//     Authorization: shiprocketToken,
+//   };
+//   try {
+//     axios
+//       .post(
+//         `https://apiv2.shiprocket.in/v1/external/orders/create/adhoc`,
+//         orderData,
+//         { headers },
+//       )
+//       .then((data) => {
+//         return res.json(data.data);
+//         //Save 'data.data.order ID' as we will use this in future API calls.
+//       })
+//       .catch((error) => {
+//         console.log(error);
+//         return res.json(error);
+//         //error has message and status code
+//       });
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
+
+const createShiprocketOrder = async (shiprocketToken, orderData) => {
   const headers = {
     Authorization: shiprocketToken,
   };
   try {
-    axios
-      .post(
-        `https://apiv2.shiprocket.in/v1/external/orders/create/adhoc`,
-        orderData,
-        { headers },
-      )
-      .then((data) => {
-        return res.json(data.data);
-        //Save 'data.data.order ID' as we will use this in future API calls.
-      })
-      .catch((error) => {
-        console.log(error);
-        return res.json(error);
-        //error has message and status code
-      });
+    const response = await axios.post(
+      "https://apiv2.shiprocket.in/v1/external/orders/create/adhoc",
+      orderData,
+      { headers },
+    );
+    return response.data;
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    throw new Error("Failed to create order");
+  }
+};
+
+const createCustomOrder = async (req, res) => {
+  const shiprocketToken = req.headers["Authorization"];
+  const orderData = req.body;
+
+  try {
+    const data = await createShiprocketOrder(shiprocketToken, orderData);
+    return res.json(data);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -134,4 +164,5 @@ module.exports = orderController = {
   createReturnOrder,
   cancelOrder,
   updateOrder,
+  createShiprocketOrder,
 };
