@@ -7,6 +7,7 @@ const getOrderId = async (req, res) => {
         // Get the total amount from the database of products
         const amount = await getTotalPrice(req.body.productIds);
 
+        console.log('req.body.amount =', req.body.amount);
         var instance = new Razorpay({ key_id: process.env.KEY_ID || "", key_secret: process.env.KEY_SECRET || "" })
         var options = {
             amount: amount * 100,
@@ -29,6 +30,8 @@ const getOrderId = async (req, res) => {
                 console.log(err);
             }
         });
+
+        console.log('getOrderId completed');
     } catch (error) {
         console.log(error.message);
     }
@@ -37,6 +40,7 @@ const getOrderId = async (req, res) => {
 const paymentCallback = async (req, res) => {
     const successUrl = 'http://localhost:3001/success';
     const { razorpay_signature, razorpay_payment_id, razorpay_order_id } = req.body
+    console.log('paymentCallback called');
     console.log(req.body)
     try {
         const string = `${razorpay_order_id}|${razorpay_payment_id}`;
@@ -48,7 +52,21 @@ const paymentCallback = async (req, res) => {
 
         if (generated_signature == razorpay_signature) {
             console.log('payment successfull')
-            return res.redirect(successUrl);
+            //create a new order in database
+            
+            // const newOrder = await prisma.order.create({
+            //     data: {
+            //         id: razorpay_order_id,
+            //         storeId: req.body.storeId,
+            //         store: req.body.store,
+            //         orderItems: req.body.orderItems,
+            //         isPaid: true,
+            //         phone: req.body.phone,
+            //         address: req.body.address,
+            //         email: req.body.email
+            //     },
+            // });
+            // return res.redirect(successUrl);
         }
     } catch (error) {
         console.log(error.message);
