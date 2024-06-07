@@ -1,11 +1,15 @@
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
+const getTotalPrice = require('../utils/getTotalPrice');
 
 const getOrderId = async (req, res) => {
     try {
+        // Get the total amount from the database of products
+        const amount = await getTotalPrice(req.body.productIds);
+
         var instance = new Razorpay({ key_id: process.env.KEY_ID || "", key_secret: process.env.KEY_SECRET || "" })
         var options = {
-            amount: req.body.amount * 100,
+            amount: amount * 100,
             currency: "INR",
             receipt: "TXN" + Date.now(),
             notes: {
@@ -20,7 +24,7 @@ const getOrderId = async (req, res) => {
 
         instance.orders.create(options, function (err, order) {
             if (order) {
-                return res.json({"orderId": order.id});
+                return res.json({"orderId": order.id, "amount": amount});
             } else {
                 console.log(err);
             }
@@ -31,7 +35,7 @@ const getOrderId = async (req, res) => {
 };
 
 const paymentCallback = async (req, res) => {
-    const successUrl = 'http://localhost:3000/success';
+    const successUrl = 'http://localhost:3001/success';
     const { razorpay_signature, razorpay_payment_id, razorpay_order_id } = req.body
     console.log(req.body)
     try {
@@ -52,7 +56,7 @@ const paymentCallback = async (req, res) => {
 }
 
 const paymentCancel = async (req, res) => {
-    const failureUrl = 'http://localhost:3000/failure';
+    const failureUrl = 'http://localhost:3001/failure';
     try {
         return res.redirect(failureUrl);
     } catch (error) {
