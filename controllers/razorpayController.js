@@ -1,11 +1,13 @@
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
 const getTotalPrice = require('../utils/getTotalPrice');
+const db = require('../db');
 
 const getOrderId = async (req, res) => {
     try {
         // Get the total amount from the database of products
         const amount = await getTotalPrice(req.body.productIds);
+        console.log("amount: ", amount)
 
         var instance = new Razorpay({ key_id: process.env.KEY_ID || "", key_secret: process.env.KEY_SECRET || "" })
         var options = {
@@ -24,6 +26,7 @@ const getOrderId = async (req, res) => {
 
         instance.orders.create(options, function (err, order) {
             if (order) {
+                console.log("orderId: ", order.id);
                 return res.json({"orderId": order.id, "amount": amount});
             } else {
                 console.log(err);
@@ -48,6 +51,31 @@ const paymentCallback = async (req, res) => {
 
         if (generated_signature == razorpay_signature) {
             console.log('payment successfull')
+            // Fetch order from DB using razorpay_order_id and update paid status
+            try {
+                // Check if the order exists
+                const existingOrder = await db.userOrder.findUnique({
+                  where: { orderId: razorpay_order_id },
+                });
+            
+                if (!existingOrder) {
+                  console.log(`Order with orderId ${razorpay_order_id} not found.`);
+                  return;
+                }
+            
+                // Update the order if it exists
+                const updatedOrder = await db.userOrder.update({
+                  where: { orderId: razorpay_order_id },
+                  data: { isPaid: true },
+                });
+                console.log('Order updated:', updatedOrder);
+              } catch (error) {
+                console.error('Error updating order:', error);
+              }
+            
+              
+            // Call the shiprocket order creation api
+
             return res.redirect(successUrl);
         }
     } catch (error) {
