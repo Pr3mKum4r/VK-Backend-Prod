@@ -1,11 +1,13 @@
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
 const getTotalPrice = require('../utils/getTotalPrice');
+const db = require('../db');
 
 const getOrderId = async (req, res) => {
     try {
         // Get the total amount from the database of products
         const amount = await getTotalPrice(req.body.productIds);
+        console.log("amount: ", amount)
 
         console.log('req.body.amount =', req.body.amount);
         var instance = new Razorpay({ key_id: process.env.KEY_ID || "", key_secret: process.env.KEY_SECRET || "" })
@@ -25,6 +27,7 @@ const getOrderId = async (req, res) => {
 
         instance.orders.create(options, function (err, order) {
             if (order) {
+                console.log("orderId: ", order.id);
                 return res.json({"orderId": order.id, "amount": amount});
             } else {
                 console.log(err);
@@ -52,21 +55,32 @@ const paymentCallback = async (req, res) => {
 
         if (generated_signature == razorpay_signature) {
             console.log('payment successfull')
-            //create a new order in database
+            // Fetch order from DB using razorpay_order_id and update paid status
+            try {
+                // Check if the order exists
+                const existingOrder = await db.userOrder.findUnique({
+                  where: { orderId: razorpay_order_id },
+                });
             
-            // const newOrder = await prisma.order.create({
-            //     data: {
-            //         id: razorpay_order_id,
-            //         storeId: req.body.storeId,
-            //         store: req.body.store,
-            //         orderItems: req.body.orderItems,
-            //         isPaid: true,
-            //         phone: req.body.phone,
-            //         address: req.body.address,
-            //         email: req.body.email
-            //     },
-            // });
-            // return res.redirect(successUrl);
+                if (!existingOrder) {
+                  console.log(`Order with orderId ${razorpay_order_id} not found.`);
+                  return;
+                }
+            
+                // Update the order if it exists
+                const updatedOrder = await db.userOrder.update({
+                  where: { orderId: razorpay_order_id },
+                  data: { isPaid: true },
+                });
+                console.log('Order updated:', updatedOrder);
+              } catch (error) {
+                console.error('Error updating order:', error);
+              }
+            
+              
+            // Call the shiprocket order creation api
+
+            return res.redirect(successUrl);
         }
     } catch (error) {
         console.log(error.message);
