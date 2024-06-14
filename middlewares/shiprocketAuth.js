@@ -1,4 +1,6 @@
 const axios = require("axios");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 const schedule = require("node-schedule");
 require("dotenv").config();
 
@@ -15,6 +17,20 @@ const authenticateShiprocket = async () => {
     );
     authToken = response.data.token;
     console.log("Shiprocket token refreshed successfully. token: ", authToken);
+    // console.log(authToken.length); --- length of 397
+    await prisma.shipRocketToken.upsert({
+      //if it is empty it will create, if token exists, it will update
+      where: {
+        id: 1,
+      },
+      update: {
+        token: authToken,
+      },
+      create: {
+        token: authToken,
+      },
+    });
+    console.log("Token updation/creation to the database successful");
   } catch (error) {
     console.error("Failed to refresh Shiprocket token:", error);
   }
@@ -38,4 +54,4 @@ const shiprocketAuthMiddleware = (req, res, next) => {
   next();
 };
 
-module.exports = shiprocketAuthMiddleware;
+module.exports = { authenticateShiprocket, shiprocketAuthMiddleware };
