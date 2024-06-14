@@ -37,11 +37,10 @@ const getOrderId = async (req, res) => {
 };
 
 const paymentCallback = async (req, res) => {
-  const successUrl = "http://localhost:3000/success";
+  const successUrl = "http://localhost:3001/success";
   const { razorpay_signature, razorpay_payment_id, razorpay_order_id } =
     req.body;
   console.log(req.body);
-
   try {
     const string = `${razorpay_order_id}|${razorpay_payment_id}`;
 
@@ -51,51 +50,46 @@ const paymentCallback = async (req, res) => {
       .digest("hex");
 
     if (generated_signature == razorpay_signature) {
-      console.log("payment successful");
-
-      await prisma.order.update({
-        where: {
-          id: razorpay_order_id,
-        },
-        data: {
-          isPaid: true,
-        },
-      });
-
-      const shiprocketToken = req.headers["Authorization"];
-      const orderData = {
-        //populate order data
-      }; //need to figure out how to get the order data
-
+      console.log("payment successfull");
+      // Fetch order from DB using razorpay_order_id and update paid status
       try {
-        const orderResponse = await createShiprocketOrder(
-          shiprocketToken,
-          orderData,
-        );
-        console.log("Order created:", orderResponse);
+        // Check if the order exists
+        const existingOrder = await db.userOrder.findUnique({
+          where: { orderId: razorpay_order_id },
+        });
+
+        if (!existingOrder) {
+          console.log(`Order with orderId ${razorpay_order_id} not found.`);
+          return;
+        }
+
+        // Update the order if it exists
+        const updatedOrder = await db.userOrder.update({
+          where: { orderId: razorpay_order_id },
+          data: { isPaid: true },
+        });
+        console.log("Order updated:", updatedOrder);
       } catch (error) {
-        console.error("Failed to create order:", error.message);
+        console.error("Error updating order:", error);
       }
 
+      // Call the shiprocket order creation api
+
       return res.redirect(successUrl);
-    } else {
-      return res.status(400).json({ error: "Invalid payment signature" });
     }
   } catch (error) {
     console.log(error.message);
-    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
 const paymentCancel = async (req, res) => {
-  const failureUrl = "http://localhost:3000/failure";
+  const failureUrl = "http://localhost:3001/failure";
   try {
     return res.redirect(failureUrl);
   } catch (error) {
     console.log(error.message);
   }
 };
-
 module.exports = razorpayController = {
   getOrderId,
   paymentCallback,

@@ -90,6 +90,46 @@ model Order {
   @@index([storeId])
 }
 
+// TEMPORARY ------------------------------------------------------------------------------------------------------------
+model UserOrder {
+  id         Int                @id @default(autoincrement())
+  orderId    String             @unique
+  userData   UserData           @relation(fields: [userDataId], references: [id])
+  userDataId Int
+  products   UserOrderProduct[]
+  isPaid     Boolean            @default(false)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+}
+
+model UserData {
+  id        Int       @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String
+  phone     String
+  address1  String
+  address2  String?
+  city      String
+  state     String
+  pin       String
+  country   String
+  orders    UserOrder[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model UserOrderProduct {
+  id          Int      @id @default(autoincrement())
+  userOrderId Int
+  productId   String
+  userOrder   UserOrder @relation(fields: [userOrderId], references: [id])
+
+  @@unique([userOrderId, productId])
+}
+
+// --------------------------------------------------------------------------------------------------------------------------
+
 // Intermediary for a many-to-many relationship
 model OrderItem {
   id        String  @id @default(uuid())
