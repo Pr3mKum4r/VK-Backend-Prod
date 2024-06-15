@@ -113,34 +113,6 @@ const createReturnOrder = async (req, res) => {
 //     "weight": 2.5
 //   }
 
-const createCustomOrder = async (req, res) => {
-  const shiprocketToken = req.headers["Authorization"];
-  //details about order will be sent from frontend as orderData
-  let orderData = req.body;
-  const headers = {
-    Authorization: shiprocketToken,
-  };
-  try {
-    axios
-      .post(
-        `https://apiv2.shiprocket.in/v1/external/orders/create/adhoc`,
-        orderData,
-        { headers },
-      )
-      .then((data) => {
-        return res.json(data.data);
-        //Save 'data.data.order ID' as we will use this in future API calls.
-      })
-      .catch((error) => {
-        console.log(error);
-        return res.json(error);
-        //error has message and status code
-      });
-  } catch (error) {
-    console.log(error);
-  }
-};
-
 const createShiprocketOrder = async (shiprocketToken, orderData) => {
   const headers = {
     Authorization: shiprocketToken,
@@ -155,6 +127,19 @@ const createShiprocketOrder = async (shiprocketToken, orderData) => {
   } catch (error) {
     console.error(error);
     throw new Error("Failed to create order");
+  }
+};
+
+const createCustomOrder = async (req, res) => {
+  const shiprocketToken = req.headers["Authorization"];
+  const orderData = req.body;
+
+  try {
+    const data = await createShiprocketOrder(shiprocketToken, orderData);
+    return res.json(data);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
   }
 };
 

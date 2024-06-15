@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const Razorpay = require("razorpay");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { createShiprocketOrder } = require("./orderController");
+const { createShiprocketOrder, updateOrder } = require("./orderController");
 
 const getOrderId = async (req, res) => {
   try {
@@ -51,10 +51,10 @@ const paymentCallback = async (req, res) => {
 
     if (generated_signature == razorpay_signature) {
       console.log("payment successfull");
-      // Fetch order from DB using razorpay_order_id and update paid status
+      // Fetch order from prisma using razorpay_order_id and update paid status
       try {
         // Check if the order exists
-        const existingOrder = await db.userOrder.findUnique({
+        const existingOrder = await prisma.UserOrder.findUnique({
           where: { orderId: razorpay_order_id },
         });
 
@@ -64,7 +64,7 @@ const paymentCallback = async (req, res) => {
         }
 
         // Update the order if it exists
-        const updatedOrder = await db.userOrder.update({
+        const updatedOrder = await prisma.UserOrder.update({
           where: { orderId: razorpay_order_id },
           data: { isPaid: true },
         });
@@ -72,9 +72,30 @@ const paymentCallback = async (req, res) => {
       } catch (error) {
         console.error("Error updating order:", error);
       }
-
       // Call the shiprocket order creation api
 
+      const authToken = await prisma.shipRocketToken.findFirst({
+        where: {
+          id: 1,
+        },
+      });
+
+      console.log(authToken.token);
+      //UserOrder - orderId,
+      //compulsorily need order_id, order_date, pickup_location, billing_customer_name, billing_city, billing_pincode, billing_state, billing_email, billing_phone,shipping_is_billing,shipping_customer_name(conditional yes),
+      const orderData = {
+        //populate order data
+      }; //need to figure out how to get the order data
+
+      try {
+        const orderResponse = await createShiprocketOrder(
+          authToken.token,
+          orderData,
+        );
+        console.log("Order created:", orderResponse);
+      } catch (error) {
+        console.error("Failed to create order:", error.message);
+      }
       return res.redirect(successUrl);
     }
   } catch (error) {
