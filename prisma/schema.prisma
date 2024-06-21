@@ -98,6 +98,7 @@ model UserOrder {
   userDataId Int
   products   UserOrderProduct[]
   isPaid     Boolean            @default(false)
+  price      Int                @default(0)
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
 }
@@ -126,6 +127,12 @@ model UserOrderProduct {
   userOrder   UserOrder @relation(fields: [userOrderId], references: [id])
 
   @@unique([userOrderId, productId])
+}
+
+model ShiprocketToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @db.Text
+  createdAt  DateTime @default(now())
 }
 
 // --------------------------------------------------------------------------------------------------------------------------
