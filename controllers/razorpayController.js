@@ -6,12 +6,13 @@ const { getLatestToken } = require('../utils/getShiprocketToken');
 const { Random } = require("random-js");
 const { createCustomOrder } = require('../utils/createOrder');
 
-const getOrderId = async (req, res) => {
+const getOrderId = async (req, res,next) => {
     try {
+        // throw new Error('This is a test error');
         // Get the total amount from the database of products
         const amount = await getTotalPrice(req.body.productIds);
         console.log("amount: ", amount)
-
+        
         console.log('req.body.amount =', req.body.amount);
         var instance = new Razorpay({ key_id: process.env.KEY_ID || "", key_secret: process.env.KEY_SECRET || "" })
         var options = {
@@ -34,21 +35,25 @@ const getOrderId = async (req, res) => {
                 return res.json({ "orderId": order.id, "amount": amount });
             } else {
                 console.log(err);
+                next(err);
             }
         });
 
         console.log('getOrderId completed');
     } catch (error) {
         console.log(error.message);
+        next(error);
     }
 };
 
-const paymentCallback = async (req, res) => {
+const paymentCallback = async (req, res,next) => {
+    
     const successUrl = 'http://localhost:3001/success';
     const { razorpay_signature, razorpay_payment_id, razorpay_order_id } = req.body
     console.log('paymentCallback called');
     console.log(req.body)
     try {
+        // throw new Error('This is a test error for paymentCallback');
         const string = `${razorpay_order_id}|${razorpay_payment_id}`;
 
         const generated_signature = crypto
@@ -157,6 +162,8 @@ const paymentCallback = async (req, res) => {
         }
     } catch (error) {
         console.log(error.message);
+        // Pass the error to error handler middleware
+        next(error);
     }
 }
 
@@ -166,6 +173,8 @@ const paymentCancel = async (req, res) => {
         return res.redirect(failureUrl);
     } catch (error) {
         console.log(error.message);
+        // Pass the error to error handler middleware
+        next(error);
     }
 }
 

@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const getAllOrders = async (req, res) => {
+const getAllOrders = async (req, res,next) => {
     const shiprocketToken = req.headers['Authorization'];
     const headers = {
         'Authorization': shiprocketToken,
@@ -13,11 +13,12 @@ const getAllOrders = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
+        next(error);
     }
 };
 //Use this API to create a return order
 // Path: VK-Backend/controllers/orderController.js
-const createReturnOrder = async (req, res) => {
+const createReturnOrder = async (req, res,next) => {
     const shiprocketToken = req.headers['Authorization'];
     const headers = {
         'Authorization': shiprocketToken
@@ -77,7 +78,7 @@ try {
 //   }
   
 
-const createCustomOrder = async (req,res)=>{
+const createCustomOrder = async (req,res,next)=>{
     const shiprocketToken = req.headers['Authorization'];
     //details about order will be sent from frontend as orderData
     let orderData = req.body;
@@ -98,6 +99,7 @@ const createCustomOrder = async (req,res)=>{
     }
     catch(error){
         console.log(error);
+        next(error);
     }
 
 }
