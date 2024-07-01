@@ -15,7 +15,8 @@ const saveUserOrder = async(req, res) =>{
             city: req.body.userData.city,
             state: req.body.userData.state,
             pin: req.body.userData.pin,
-            country: req.body.userData.country
+            country: req.body.userData.country,
+            amount: req.body.amount
         }
 
         const userData = await db.userData.create({
@@ -40,7 +41,8 @@ const saveUserOrder = async(req, res) =>{
             products: {
                 create: data.productIds.map(productId => ({ productId }))
             },
-            isPaid: false
+            isPaid: false,
+            price: data.amount
             }
         });
         console.log(userOrder);
