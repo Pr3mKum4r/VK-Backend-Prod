@@ -19,6 +19,9 @@ const { startTokenRefreshJob } = require('./utils/saveShiprocketToken.js');
 
 startTokenRefreshJob();
 
+app.use("/", (req, res) => {
+    res.send("Server is running");
+});
 app.use("/api/payments", paymentRoutes);
 //app.use("/api/v1/shiprocket", shiprocketAuthMiddleware);
 app.use("/api/v1/shiprocket", orderRoutes); 
